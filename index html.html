@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria de Cores Infinita</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ================================== */
+        /*          CSS MODELO AVANÇADO         */
+        /* ================================== */
+
+        /* --- Variáveis Globais (Root) --- */
+        :root {
+            --bg-dark: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --glow-color: rgba(88, 166, 255, 0.5);
+            --accent-gradient: linear-gradient(45deg, #58a6ff, #9370db, #e83e8c);
+        }
+
+        /* --- Reset e Configurações Base --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        
+        /* --- Cabeçalho e Controles --- */
+        .header-controls {
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem); /* Fonte responsiva */
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* --- Botão Principal Chamativo --- */
+        .btn-generate {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: white;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            background: var(--accent-gradient);
+            background-size: 200% 200%;
+            transition: all 0.4s ease-in-out;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-generate:hover {
+            background-position: 100% 0;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--glow-color);
+        }
+        
+        .btn-generate:active {
+            transform: translateY(0);
+        }
+
+        /* --- Galeria de Cores Principal --- */
+        .main-content {
+            padding: 2rem 1rem;
+        }
+        
+        .color-grid {
+            display: grid;
+            /* Grid responsivo: auto-fit cria colunas, minmax define o tamanho mínimo e máximo */
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        /* --- Card de Cor Individual (Modelo) --- */
+        .color-card {
+            position: relative;
+            height: 250px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .color-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px var(--glow-color), 0 0 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        
+        /* --- Efeito de Vidro (Glassmorphism) --- */
+        .card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hex-code {
+            font-size: 1.2rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        /* --- Loader / Spinner de Carregamento --- */
+        #loader {
+            display: flex;
+            justify-content: center;
+            padding: 2rem;
+            width: 100%;
+            grid-column: 1 / -1; /* Ocupa todas as colunas do grid */
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border-color);
+            border-top-color: #58a6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* --- Notificação de Cópia --- */
+        #copy-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease, bottom 0.3s ease;
+        }
+
+        #copy-notification.show {
+            opacity: 1;
+            visibility: visible;
+            bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-controls">
+        <h1>Galeria de Cores Infinita</h1>
+        <p class="subtitle">
+            Gere mais de 200 cores. Role para baixo para carregar mais. Clique em uma cor para copiar.
+            <span id="color-counter"></span>
+        </p>
+        <button id="generate-btn" class="btn-generate">Gerar Novas Cores</button>
+    </header>
+
+    <main class="main-content">
+        <div id="color-grid" class="color-grid">
+            <!-- Os cards de cores serão inseridos aqui pelo JavaScript -->
+        </div>
+        <div id="loader">
+            <div class="spinner"></div>
+        </div>
+    </main>
+
+    <div id="copy-notification">Cor copiada para a área de transferência!</div>
+
+    <script>
+    /* ================================== */
+    /*      JAVASCRIPT PRO & EFICIENTE      */
+    /* ================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Seletores de Elementos ---
+        const colorGrid = document.getElementById('color-grid');
+        const loader = document.getElementById('loader');
+        const generateBtn = document.getElementById('generate-btn');
+        const colorCounterEl = document.getElementById('color-counter');
+        const copyNotification = document.getElementById('copy-notification');
+
+        // --- Configurações ---
+        const TOTAL_COLORS_TO_GENERATE = 200;
+        const COLORS_PER_LOAD = 20;
+        let loadedColorsCount = 0;
+        let isGenerating = false;
+
+        /**
+         * Gera uma cor hexadecimal aleatória.
+         * @returns {string} Uma string de cor no formato #RRGGBB.
+         */
+        const generateRandomColor = () => '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+
+        /**
+         * Calcula se o texto deve ser preto ou branco para melhor contraste com o fundo.
+         * @param {string} hexColor - A cor de fundo.
+         * @returns {string} '#000000' (preto) ou '#FFFFFF' (branco).
+         */
+        const getContrastColor = (hexColor) => {
+            if (!hexColor) return '#000000';
+            const r = parseInt(hexColor.substr(1, 2), 16);
+            const g = parseInt(hexColor.substr(3, 2), 16);
+            const b = parseInt(hexColor.substr(5, 2), 16);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.5 ? '#000000' : '#FFFFFF';
+        };
+
+        /**
+         * Copia o código da cor e mostra uma notificação.
+         * @param {string} hexColor - O código hexadecimal para copiar.
+         */
+        const copyColorToClipboard = (hexColor) => {
+            navigator.clipboard.writeText(hexColor.toUpperCase()).then(() => {
+                copyNotification.textContent = `${hexColor.toUpperCase()} copiado!`;
+                copyNotification.classList.add('show');
+                setTimeout(() => {
+                    copyNotification.classList.remove('show');
+                }, 2000);
+            }).catch(err => {
+                console.error('Falha ao copiar cor:', err);
+                alert('Não foi possível copiar a cor.');
+            });
+        };
+        
+        /**
+         * Cria e retorna um elemento de card de cor.
+         * @param {string} hexColor - A cor para o card.
+         * @returns {HTMLElement} O elemento do card de cor pronto para ser adicionado ao DOM.
+         */
+        const createColorCard = (hexColor) => {
+            const card = document.createElement('div');
+            card.className = 'color-card';
+            card.style.backgroundColor = hexColor;
+
+            const contrastColor = getContrastColor(hexColor);
+            
+            card.innerHTML = `
+                <div class="card-overlay">
+                    <span class="hex-code" style="color: ${contrastColor};">${hexColor.toUpperCase()}</span>
+                </div>
+            `;
+
+            card.addEventListener('click', () => copyColorToClipboard(hexColor));
+            return card;
+        };
+
+        /**
+         * Carrega um lote de novos cards de cores.
+         */
+        const loadMoreColors = () => {
+            if (isGenerating || loadedColorsCount >= TOTAL_COLORS_TO_GENERATE) {
+                // Se já estiver gerando ou já atingiu o total, não faz nada
+                if (loadedColorsCount >= TOTAL_COLORS_TO_GENERATE) {
+                    loader.style.display = 'none'; // Esconde o loader permanentemente
+                }
+                return;
+            }
+
+            isGenerating = true;
+            loader.style.display = 'flex';
+
+            // Usamos um pequeno timeout para garantir que o loader apareça na tela antes do trabalho pesado
+            setTimeout(() => {
+                const fragment = document.createDocumentFragment();
+                const colorsToLoadNow = Math.min(COLORS_PER_LOAD, TOTAL_COLORS_TO_GENERATE - loadedColorsCount);
+
+                for (let i = 0; i < colorsToLoadNow; i++) {
+                    const color = generateRandomColor();
+                    const card = createColorCard(color);
+                    fragment.appendChild(card);
+                }
+
+                colorGrid.appendChild(fragment);
+                loadedColorsCount += colorsToLoadNow;
+                updateColorCounter();
+
+                isGenerating = false;
+                if (loadedColorsCount >= TOTAL_COLORS_TO_GENERATE) {
+                    loader.style.display = 'none';
+                }
+            }, 100);
+        };
+        
+        /**
+         * Atualiza o contador de cores visível no cabeçalho.
+         */
+        const updateColorCounter = () => {
+            colorCounterEl.textContent = `(${loadedColorsCount} de ${TOTAL_COLORS_TO_GENERATE} cores)`;
+        }
+
+        /**
+         * Limpa a grade e gera uma nova paleta do zero.
+         */
+        const resetAndGenerate = () => {
+            window.scrollTo(0, 0); // Rola para o topo
+            colorGrid.innerHTML = '';
+            loadedColorsCount = 0;
+            updateColorCounter();
+            loadMoreColors();
+        };
+
+        // --- Lógica de Scroll Infinito (Intersection Observer) ---
+        const observer = new IntersectionObserver((entries) => {
+            // entries[0] é o nosso elemento #loader
+            if (entries[0].isIntersecting) {
+                loadMoreColors();
+            }
+        }, {
+            root: null, // viewport
+            threshold: 0.1 // carrega quando 10% do loader está visível
+        });
+
+        // Inicia a observação do elemento loader
+        observer.observe(loader);
+
+        // --- Eventos ---
+        generateBtn.addEventListener('click', resetAndGenerate);
+
+        // --- Inicialização ---
+        updateColorCounter(); // Inicia o contador com 0
+    });
+    </script>
+</body>
+</html>
